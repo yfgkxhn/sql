@@ -161,6 +161,9 @@ public abstract class AbstractDAO<T> {
 
         for (Field field : t.getClass().getDeclaredFields()) {
 
+            if (!field.isAnnotationPresent(StorableField.class))
+                continue;
+
             Object object = null;
 
             try { object = FieldUtils.readField(field, t, true); }
@@ -194,18 +197,12 @@ public abstract class AbstractDAO<T> {
      */
     public void insertOneSync(T t) {
 
-        Object[] objects = Arrays.stream(t.getClass().getDeclaredFields()).map(field -> {
+        Object[] objects = Arrays.stream(t.getClass().getDeclaredFields()).filter(filter -> filter.isAnnotationPresent(StorableField.class)).map(field -> {
 
             Object object = null;
 
             try { object = FieldUtils.readField(field, t, true); }
             catch (IllegalAccessException exception) { exception.printStackTrace(); return null; }
-
-            /*
-            if (object instanceof Map || object instanceof Collection)
-                object = ObjectUtils.serializeObject(object);
-
-             */
 
             if (object instanceof Collection || object instanceof Map)
                 object = ObjectUtils.serializeObject(object);
